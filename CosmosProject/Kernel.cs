@@ -31,8 +31,6 @@ namespace CosmosProject
 
 			usedCommands = new List<string>();
 
-
-
 			Sys.FileSystem.VFS.VFSManager.RegisterVFS(fs);
 
 			possible = "moegliche Commands:\n" +
@@ -56,9 +54,6 @@ namespace CosmosProject
 		}
 		protected override void Run()
 		{
-			//Help
-			//version
-			// args[] für verschiedene Argumente
 
 			Console.Write("Enter Command: ");
 
@@ -81,13 +76,29 @@ namespace CosmosProject
 					}
 				case "dir":
 					{
-						listdir(@"0:\");
-						break;
+						if (args.Length == 1)
+						{
+							listdir(@"0:\");
+							break;
+						}
+						else
+						{
+							listdir(@"0:\" + args[1]);
+							break;
+						}
 					}
 				case "ls":
 					{
-						listdir(@"0:\");
-						break;
+						if(args.Length == 1)
+						{
+							listdir(@"0:\");
+							break;
+						}
+						else
+						{
+							listdir(@"0:\" + args[1]);
+							break;
+						}
 					}
 				case "echo":
 					{
@@ -267,33 +278,10 @@ namespace CosmosProject
 			}
 		}
 
-		private void listdir(string root)
-		{
-			//var directory_list = Directory.GetDirectories(root);
-
-			////var directory_list = Directory.GetDirectories(@"0:\");
-			//string[] files_list = new string[300];
-
-			//foreach (var dire in directory_list)
-			//{
-			//	files_list = Directory.GetFiles();
-			//	Console.WriteLine(dire);
-			//	foreach (var file in files_list)
-			//	{
-			//		Console.WriteLine("\t" + file);
-			//	}
-			//	listdir(dire);
-			//}
-
-			//Console.WriteLine("------------------------------------");
-
-			//files_list = Directory.GetFiles(@"0:\");
-			//foreach (var file in files_list)
-			//{
-			//	Console.WriteLine(file);
-
-			var directory_list = fs.GetDirectoryListing(root);
-
+		private void listdir(string payload)
+		{ 
+			var directory_list = fs.GetDirectoryListing(payload);
+	
 			foreach (var directory in directory_list)
 			{
 				Console.WriteLine($"{directory.mFullPath}");
@@ -352,21 +340,36 @@ namespace CosmosProject
 
 		private int editfile(string[] payload)
 		{
-			if (payload.Length > 1)
+			if (payload.Length > 1 && File.Exists(@"0:\" + payload[1]))
 			{
 				try
 				{
 					string contents = File.ReadAllText(@"0:\" + payload[1]);
 
-					Console.WriteLine(contents);
+					if (String.IsNullOrEmpty(contents) || contents.Equals("\n"))
+					{
+						contents = "";
+					}
 
-					var input = Console.ReadLine();
+					string input = "";
+					string text = "";
 
-					string text = contents + "\n" + input;
+					while (true)
+					{
+						input = Console.ReadLine();
+
+						if (input.Equals("quit", StringComparison.OrdinalIgnoreCase))
+						{
+							break;
+						}
+
+						text += input + "\n";
+
+					}
 
 					try
 					{
-						File.WriteAllText(@"0:\" + payload[1], text);
+						File.WriteAllText(@"0:\" + payload[1],contents +  text);
 						return 0;
 					}
 					catch (Exception e)
@@ -380,10 +383,12 @@ namespace CosmosProject
 					Console.WriteLine(e.ToString());
 					return 2;
 				}
+
+				return 0;
 			}
 			else
 			{
-				Console.WriteLine("Invalid Usage! Enter \"help\" for more informations");
+				Console.WriteLine("Invalid Usage or argument is not a file! Enter \"help\" for more informations");
 				return 1;
 			}
 		}
