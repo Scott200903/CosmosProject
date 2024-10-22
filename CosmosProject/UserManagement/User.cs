@@ -8,24 +8,30 @@ namespace CosmosProject.UserManagement
 {
 	public class User
 	{
-		private string vorname;
-		private string nachname;
-		private string username;
-		private string password;
-		private string email;
-		private bool isAdmin;
+		private string vorname { get; set; }
+		private string nachname { get; set; }
+		private string username { get; set; }
+		private string password { get; set; }
+		private string email { get; set; }
 
         //admin = 0 - kein Administrator
         //admin = 1 - Administrator
 
-        public User(string username, string vorname, string nachname, string password, string email, bool admin)
+        public User()
+        {
+			this.vorname = "";
+			this.nachname = "";
+			this.username = "";
+			this.password = "";
+			this.email = "";
+		}
+        public User(string username, string vorname, string nachname, string password, string email)
         {
             this.username = username;
 			this.vorname = vorname;
 			this.nachname = nachname;
 			this.password = password;
 			this.email = email;
-			this.isAdmin = admin;
         }
 		public void setPassword(string newPassword)
 		{
@@ -55,10 +61,6 @@ namespace CosmosProject.UserManagement
 		public string getEmail()
 		{
 			return this.email;
-		}
-		public bool getStatus()
-		{
-			return isAdmin;
 		}
 
 	}

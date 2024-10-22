@@ -11,11 +11,23 @@ using System.IO;
 using CosmosProject.fsystem;
 using Cosmos.System.FileSystem.Listing;
 using System.ComponentModel.Design;
+using System.Security.Cryptography;
+using Microsoft.VisualBasic;
+using static System.Net.Mime.MediaTypeNames;
+using System.Data;
 
 namespace CosmosProject
 {
 	public class Kernel : Sys.Kernel
 	{
+		public string CurrentPath = "0:\\";
+
+		public char[] forbiddenchars = new char[]{
+			'$',
+			'%',
+			'\\',
+		};
+
 		List<User> tmp;
 		Sys.FileSystem.CosmosVFS fs = new Cosmos.System.FileSystem.CosmosVFS();
 
@@ -54,7 +66,6 @@ namespace CosmosProject
 		}
 		protected override void Run()
 		{
-
 			Console.Write("Enter Command: ");
 
 			string input = Console.ReadLine();
@@ -117,6 +128,7 @@ namespace CosmosProject
 					}
 				case "user":
 					{
+						controlUser(args);
 						break;
 					}
 				case "poweroff":
@@ -257,6 +269,97 @@ namespace CosmosProject
 			}
 		}
 
+		public void WriteLN(string path, string text)
+		{
+
+		}
+
+		public bool CheckFile(string path)
+		{
+			try
+			{
+				bool check = File.Exists(@"0:\" + path);
+				return check;
+			}
+			catch(Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+				return false;
+			}
+		}
+		public void controlUser(string[] payload)
+		{
+			if (payload.Length == 1)
+			{
+				Console.WriteLine("no argumnets");
+			}
+			else
+			{
+				switch (payload[1].ToLower())
+				{
+					case "-add":
+						{
+							Console.Write("Enter Username:");
+							string username = Console.ReadLine();
+
+							Console.Write("Enter Vorname:");
+							string vorname = Console.ReadLine();
+
+							Console.Write("Enter Nachname:");
+							string nachname = Console.ReadLine();
+
+							Console.Write("Enter Password:");
+							string password = Console.ReadLine();
+
+							Console.Write("Enter Email:");
+							string email = Console.ReadLine();
+
+							User usr = new User(username, vorname, nachname, password, email);
+							string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + usr.getPassword().GetHashCode().ToString() + ":" + usr.getEmail();
+
+							Console.WriteLine(userstring);
+
+							string usercnfFile = @"0:\configs\users.txt";
+
+							if (File.Exists(usercnfFile))
+							{
+								var content = File.ReadAllText(usercnfFile);
+
+								File.WriteAllText(usercnfFile, content +"\n" + userstring);
+								return;
+							}
+							else
+							{
+								Console.WriteLine("Config-File for Users doesn´t exists!");
+								return;
+							}							
+
+							//
+
+							//string configUser = @"0:\users\configs.txt";
+							//if (File.Exists(@"0:\users\configs.txt"))
+							//{
+							//	string configUser = @"0:\users\configs.txt";
+							//	User usr = new();
+							//	string contents = File.ReadAllText(configUser);
+							//	string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + ComputeSha256Hash(usr.getPassword()) + ":" + usr.getEmail();
+
+							//	File.WriteAllText(configUser, contents + userstring);
+							//}
+							//else
+							//{
+							//	Console.WriteLine("Config not exists");
+							//}
+							break;
+						}
+					default:
+						{
+							Console.WriteLine("Invalid Command! Enter \"help\" for more informations!");
+							break;
+						}
+				}
+			}
+		}
 		private string runtime()
 		{
 			TimeSpan span = DateTime.Now - dt_start;
@@ -279,7 +382,13 @@ namespace CosmosProject
 		}
 
 		private void listdir(string payload)
-		{ 
+		{
+			if (!Directory.Exists(payload))
+			{
+				Console.WriteLine($"{payload} is not a file or directory");
+				return;
+			}
+
 			var directory_list = fs.GetDirectoryListing(payload);
 	
 			foreach (var directory in directory_list)
@@ -364,7 +473,6 @@ namespace CosmosProject
 						}
 
 						text += input + "\n";
-
 					}
 
 					try
@@ -383,8 +491,6 @@ namespace CosmosProject
 					Console.WriteLine(e.ToString());
 					return 2;
 				}
-
-				return 0;
 			}
 			else
 			{
@@ -395,18 +501,27 @@ namespace CosmosProject
 
 		private int createfile(string[] payload)
 		{
-			if (payload.Length == 2)
+			if (payload.Length >= 2)
 			{
 				try
 				{
 					if (File.Exists(@"0:\" + payload[1]))
 					{
+						if (payload[2] == "-y")
+						{
+							fs.CreateFile(@"0:\" + payload[1]);
+
+							//File.Create(@"0:\" + payload[1]);
+							Console.WriteLine("Datei wurde ueberschrieben!");
+							return 0;
+						}
+
 						Console.WriteLine("Datei existiert bereits! Moechtest du die Datei ueberschreiben?");
 						string input = Console.ReadLine();
 
 						input = input.ToLower();
 
-						if (input == "y" || input == "j")
+						if (input == "y" || input == "j" || payload[2] == "-y")
 						{
 							fs.CreateFile(@"0:\" + payload[1]);
 
@@ -505,6 +620,69 @@ namespace CosmosProject
 			//			return 2;
 			//		}
 			//	}
+		}
+
+
+
+		public bool Create(string command)
+		{
+			string[] args = command.Split(" ");
+
+			if(args.Length < 3)
+			{
+				Console.WriteLine("To few Arguments");
+				return false;
+			}
+			//Create File local
+			else if(args.Length == 2)
+			{
+				string filename = args[1];
+
+				foreach(char c in forbiddenchars)
+				{
+					if (filename.Contains(c))
+					{
+						Console.WriteLine("Invalid chars");
+						return false;
+					}
+				}
+
+				if (Directory.Exists(CurrentPath + filename))
+				{
+					Console.WriteLine("File exists");
+					return false;
+				}
+				
+				//Für Berechtigungen muss man eine Klasse erstellen, die angibt, welche leute wo schreiben können
+
+				File.Create(CurrentPath + filename);	
+				return true;
+
+			}
+			//CReate file in Directory
+			else if(args.Length == 3)
+			{
+
+			}
+			else
+			{
+				string location = args[1];
+				string filename = args[2];
+
+				if (CheckFile(CurrentPath+filename))
+				{
+					Console.WriteLine("File exists");
+				}
+				else
+				{
+					if (Directory.Exists(CurrentPath + location + filename))
+					{
+
+					}
+				}
+			}
+
+			
 		}
 	}
 }
