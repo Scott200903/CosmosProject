@@ -20,15 +20,28 @@ namespace CosmosProject
 {
 	public class Kernel : Sys.Kernel
 	{
-		public string CurrentPath = "0:\\";
+		public string CurrentPath = @"0:\\";
+
+		public string UserConfigFile = @"0:\configs\users.txt";
 
 		public char[] forbiddenchars = new char[]{
 			'$',
 			'%',
-			'\\',
+			'_',
 		};
 
-		List<User> tmp;
+		public char[] forbiddenpwchars = new char[]{
+			'ü',
+			'Ü',
+			'ä',
+			'Ä',
+			'ö',
+			'Ö',
+			' '
+		};
+
+		List<User> allusers;
+
 		Sys.FileSystem.CosmosVFS fs = new Cosmos.System.FileSystem.CosmosVFS();
 
 		DateTime dt_start = DateTime.Now;
@@ -39,7 +52,9 @@ namespace CosmosProject
 		protected override void BeforeRun()
 		{
 			Console.WriteLine("Cosmos booted successfully.");
-			tmp = new List<User>();
+			allusers = new List<User>();
+
+			//allusers = getallUsers();
 
 			usedCommands = new List<string>();
 
@@ -100,7 +115,7 @@ namespace CosmosProject
 					}
 				case "ls":
 					{
-						if(args.Length == 1)
+						if (args.Length == 1)
 						{
 							listdir(@"0:\");
 							break;
@@ -110,6 +125,11 @@ namespace CosmosProject
 							listdir(@"0:\" + args[1]);
 							break;
 						}
+					}
+				case "write":
+					{
+						WriteLN(@"0:\configs\users.txt", "Testtest");
+						break;
 					}
 				case "echo":
 					{
@@ -238,6 +258,17 @@ namespace CosmosProject
 			//	Console.WriteLine("Anzahl an Benutzern: " + tmp.Count);
 			//}
 		}
+		public List<User> getallUsers()
+		{
+			List<User> users = new List<User>();
+			foreach (string line in File.ReadLines(UserConfigFile))
+			{
+				string[] splitted = line.Split(":");
+				users.Add(new User(splitted[0], splitted[1], splitted[2], splitted[3], splitted[4]));
+			}
+
+			return users;
+		}
 		public void getSpace(string[] args)
 		{
 			if (args.Length < 2)
@@ -269,9 +300,51 @@ namespace CosmosProject
 			}
 		}
 
+		public bool isvalidpw(string password)
+		{
+			bool valid = false;
+			if (password == null)
+			{
+				return valid = false;
+			}
+			else
+			{
+				if (password.Length < 6)
+				{
+					Console.WriteLine("Password is to short - min. 6 characters");
+					return valid = false;
+				}
+
+				foreach (char c in forbiddenpwchars)
+				{
+					if (password.Contains(c))
+					{
+						Console.WriteLine("Invalid Character {0} in password", c);
+						return valid = false;
+					}
+				}
+
+				return valid = true;
+			}
+			return valid = false;
+		}
+
 		public void WriteLN(string path, string text)
 		{
+			Console.WriteLine(path);
 
+			if (File.Exists(path))
+			{
+				using (StreamWriter sw = File.AppendText(path))
+				{
+					sw.WriteLine(text);
+					sw.Close();
+				}
+			}
+			else
+			{
+				Console.WriteLine("File not exists");
+			}
 		}
 
 		public bool CheckFile(string path)
@@ -281,7 +354,7 @@ namespace CosmosProject
 				bool check = File.Exists(@"0:\" + path);
 				return check;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				Console.WriteLine(ex.Message);
 				return false;
@@ -308,9 +381,21 @@ namespace CosmosProject
 							Console.Write("Enter Nachname:");
 							string nachname = Console.ReadLine();
 
-							Console.Write("Enter Password:");
-							string password = Console.ReadLine();
+							string password = "";
+							while (!isvalidpw(password))
+							{
+								Console.Write("Enter Password:");
+								password = Console.ReadLine();
 
+								Console.Write("Enter Password again:");
+								string passwordretype = Console.ReadLine();
+
+								if (password != passwordretype)
+								{
+									Console.WriteLine("Password not the same");
+									return;
+								}
+							}
 							Console.Write("Enter Email:");
 							string email = Console.ReadLine();
 
@@ -321,37 +406,51 @@ namespace CosmosProject
 
 							string usercnfFile = @"0:\configs\users.txt";
 
-							if (File.Exists(usercnfFile))
-							{
-								var content = File.ReadAllText(usercnfFile);
+							WriteLN(usercnfFile, userstring);
 
-								File.WriteAllText(usercnfFile, content +"\n" + userstring);
-								return;
-							}
-							else
-							{
-								Console.WriteLine("Config-File for Users doesn´t exists!");
-								return;
-							}							
-
-							//
-
-							//string configUser = @"0:\users\configs.txt";
-							//if (File.Exists(@"0:\users\configs.txt"))
-							//{
-							//	string configUser = @"0:\users\configs.txt";
-							//	User usr = new();
-							//	string contents = File.ReadAllText(configUser);
-							//	string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + ComputeSha256Hash(usr.getPassword()) + ":" + usr.getEmail();
-
-							//	File.WriteAllText(configUser, contents + userstring);
-							//}
-							//else
-							//{
-							//	Console.WriteLine("Config not exists");
-							//}
 							break;
 						}
+					case "-list":
+						{
+							allusers = getallUsers();
+
+							foreach(User u in allusers)
+							{
+								Console.WriteLine(u.getUsername() + "||" + u.getVorname() + "||" + u.getNachname() + "||" + u.getPassword() + "||" + u.getEmail());
+							}
+						}
+
+						//if (File.Exists(usercnfFile))
+						//{
+						//	Wr
+
+						//	File.WriteAllText(usercnfFile, content +"\n" + userstring);
+						//	return;
+						//}
+						//else
+						//{
+						//	Console.WriteLine("Config-File for Users doesn´t exists!");
+						//	return;
+						//}							
+
+						//
+
+						//string configUser = @"0:\users\configs.txt";
+						//if (File.Exists(@"0:\users\configs.txt"))
+						//{
+						//	string configUser = @"0:\users\configs.txt";
+						//	User usr = new();
+						//	string contents = File.ReadAllText(configUser);
+						//	string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + ComputeSha256Hash(usr.getPassword()) + ":" + usr.getEmail();
+
+						//	File.WriteAllText(configUser, contents + userstring);
+						//}
+						//else
+						//{
+						//	Console.WriteLine("Config not exists");
+						//}
+						break;
+				
 					default:
 						{
 							Console.WriteLine("Invalid Command! Enter \"help\" for more informations!");
@@ -380,7 +479,6 @@ namespace CosmosProject
 				Console.WriteLine("Enter an option");
 			}
 		}
-
 		private void listdir(string payload)
 		{
 			if (!Directory.Exists(payload))
@@ -404,7 +502,6 @@ namespace CosmosProject
 				}
 			}
 		}
-
 		private void catfile(string[] payload)
 		{
 			if (payload.Length > 1)
@@ -503,17 +600,29 @@ namespace CosmosProject
 		{
 			if (payload.Length >= 2)
 			{
+				foreach(char c in forbiddenchars)
+				{
+					if (payload[1].Contains(c))
+					{
+						Console.WriteLine("Invalid char " + c + " in filename");
+						return -1;
+					}
+				}
 				try
 				{
-					if (File.Exists(@"0:\" + payload[1]))
+					if (File.Exists(CurrentPath + payload[1]))
 					{
-						if (payload[2] == "-y")
+						
+						//Aufruf mit -y Argument dann wird die Datei direkt überschrieben
+						if(payload.Length == 3)
 						{
-							fs.CreateFile(@"0:\" + payload[1]);
-
-							//File.Create(@"0:\" + payload[1]);
-							Console.WriteLine("Datei wurde ueberschrieben!");
-							return 0;
+							if (payload[2] == "-y")
+							{
+								fs.CreateFile(CurrentPath + payload[1]);
+								//File.Create(@"0:\" + payload[1]);
+								Console.WriteLine("Datei wurde ueberschrieben!");
+								return 0;
+							}
 						}
 
 						Console.WriteLine("Datei existiert bereits! Moechtest du die Datei ueberschreiben?");
@@ -521,13 +630,18 @@ namespace CosmosProject
 
 						input = input.ToLower();
 
-						if (input == "y" || input == "j" || payload[2] == "-y")
+						if (input == "y" || input == "j")
 						{
-							fs.CreateFile(@"0:\" + payload[1]);
+							fs.CreateFile(CurrentPath + payload[1]);
 
 							//File.Create(@"0:\" + payload[1]);
 							Console.WriteLine("Datei wurde ueberschrieben!");
 							return 0;
+						}
+						else if(input == "n")
+						{
+							Console.WriteLine("Datei wurde nicht ueberschrieben!");
+							return 2;
 						}
 						else
 						{
@@ -537,7 +651,7 @@ namespace CosmosProject
 					}
 					else
 					{
-						fs.CreateFile(@"0:\" + payload[1]);
+						fs.CreateFile(CurrentPath + payload[1]);
 						return 0;
 					}
 				}
@@ -624,65 +738,65 @@ namespace CosmosProject
 
 
 
-		public bool Create(string command)
-		{
-			string[] args = command.Split(" ");
+		//public bool Create(string command)
+		//{
+		//	string[] args = command.Split(" ");
 
-			if(args.Length < 3)
-			{
-				Console.WriteLine("To few Arguments");
-				return false;
-			}
-			//Create File local
-			else if(args.Length == 2)
-			{
-				string filename = args[1];
+		//	if(args.Length < 3)
+		//	{
+		//		Console.WriteLine("To few Arguments");
+		//		return false;
+		//	}
+		//	//Create File local
+		//	else if(args.Length == 2)
+		//	{
+		//		string filename = args[1];
 
-				foreach(char c in forbiddenchars)
-				{
-					if (filename.Contains(c))
-					{
-						Console.WriteLine("Invalid chars");
-						return false;
-					}
-				}
+		//		foreach(char c in forbiddenchars)
+		//		{
+		//			if (filename.Contains(c))
+		//			{
+		//				Console.WriteLine("Invalid chars");
+		//				return false;
+		//			}
+		//		}
 
-				if (Directory.Exists(CurrentPath + filename))
-				{
-					Console.WriteLine("File exists");
-					return false;
-				}
+		//		if (Directory.Exists(CurrentPath + filename))
+		//		{
+		//			Console.WriteLine("File exists");
+		//			return false;
+		//		}
 				
-				//Für Berechtigungen muss man eine Klasse erstellen, die angibt, welche leute wo schreiben können
+		//		//Für Berechtigungen muss man eine Klasse erstellen, die angibt, welche leute wo schreiben können
 
-				File.Create(CurrentPath + filename);	
-				return true;
+		//		File.Create(CurrentPath + filename);	
+		//		return true;
 
-			}
-			//CReate file in Directory
-			else if(args.Length == 3)
-			{
+		//	}
+		//	//CReate file in Directory
+		//	else if(args.Length == 3)
+		//	{
 
-			}
-			else
-			{
-				string location = args[1];
-				string filename = args[2];
+		//	}
+		//	else
+		//	{
+		//		string location = args[1];
+		//		string filename = args[2];
 
-				if (CheckFile(CurrentPath+filename))
-				{
-					Console.WriteLine("File exists");
-				}
-				else
-				{
-					if (Directory.Exists(CurrentPath + location + filename))
-					{
+		//		if (CheckFile(CurrentPath+filename))
+		//		{
+		//			Console.WriteLine("File exists");
+		//		}
+		//		else
+		//		{
+		//			if (Directory.Exists(CurrentPath + location + filename))
+		//			{
 
-					}
-				}
-			}
+		//			}
+		//		}
+		//	}
 
 			
-		}
+		//}
 	}
 }
