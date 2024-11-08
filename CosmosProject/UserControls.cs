@@ -1,4 +1,5 @@
-﻿using CosmosProject.UserManagement;
+﻿using Cosmos.System.Network.IPv4.TCP;
+using CosmosProject.UserManagement;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +22,8 @@ namespace CosmosProject
 		{
 			commandMap = new Dictionary<string, Action<string[]>>
 			{
-				{ "user", args => controlUser(args) }
+				{ "user", args => controlUser(args) },
+				{ "logout", args => Kernel.CurrentUser = new User() },
 			};
 		}
 		public void commands(string[] args)
@@ -51,14 +53,44 @@ namespace CosmosProject
 			}
 		}
 
+		public static bool login(string username, string password)
+		{
+			if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+			{
+				foreach (User x in Kernel.allusers)
+				{
+					if (x.getUsername() == username)
+					{
+						if (x.getPassword().Equals(User.GenerateHash(password)))
+						{
+							Kernel.CurrentUser = x;
+							return true;
+						}
+						else
+						{
+							Console.WriteLine("username or password is wrong! try again.");
+							return false;
+						}
+					}
+					else
+					{
+						Console.WriteLine("user not found");
+					}
+				}
+				Console.WriteLine("No User with username {0} found! Please try again!", username);
+				return false;
+			}
+			return false;
+		}
+
 		public static List<User> getallUsers()
 		{
 			List<User> users = new List<User>();
 			int linecnt = 0;
 			foreach (string line in File.ReadLines(Kernel.UserConfigFile))
 			{
-				Console.WriteLine(linecnt);
-				linecnt++;
+				//Console.WriteLine(linecnt);
+				//linecnt++;
 				if(line == "" || String.IsNullOrEmpty(line))
 				{
 					//Console.WriteLine("line empty");
@@ -169,7 +201,7 @@ namespace CosmosProject
 							string email = Console.ReadLine();
 
 							User usr = new User(username, vorname, nachname, password, email, 0);
-							string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + usr.getPassword().GetHashCode().ToString() + ":" + usr.getEmail() + ":" + usr.getPerm().ToString();
+							string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + User.GenerateHash(usr.getPassword()) + ":" + usr.getEmail() + ":" + usr.getPerm().ToString();
 
 							Console.WriteLine(userstring);
 

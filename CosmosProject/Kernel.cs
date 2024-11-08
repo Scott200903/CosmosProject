@@ -43,9 +43,11 @@ namespace CosmosProject
 		public static List<User> allusers;
 		public static List<User> adminusers;
 		public static List<User> normalusers;
+		public static User CurrentUser = new User();
 
 		public int cntusers;
 		public int cntadmin;
+		private int welcome = 0;
 		public static Sys.FileSystem.CosmosVFS fs = new Cosmos.System.FileSystem.CosmosVFS();
 
 		public static DateTime dt_start;
@@ -101,12 +103,13 @@ namespace CosmosProject
 				fs.CreateFile(UserConfigFile);
 			}
 
-			//allusers.Clear();
-			//adminusers.Clear();
-			//normalusers.Clear();
 			try
 			{
+				allusers.Clear();
+				adminusers.Clear();
+				normalusers.Clear();
 				allusers = UserControls.getallUsers();
+
 			}
 			catch (Exception ex) {Console.WriteLine(ex.Message); return; }
 			
@@ -118,6 +121,7 @@ namespace CosmosProject
 				//Console.WriteLine(tmp.getNachname());
 				//Console.WriteLine(tmp.getEmail());
 				//Console.WriteLine(tmp.getPerm());
+				//Console.WriteLine(tmp.getPassword());
 				if (tmp.getPerm() == 0)
 				{
 					cntusers++;
@@ -163,12 +167,39 @@ namespace CosmosProject
 				string email = Console.ReadLine();
 
 				User usr = new User(username, vorname, nachname, password, email, 1);
-				string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + usr.getPassword().GetHashCode().ToString() + ":" + usr.getEmail() + ":" + usr.getPerm();
+				string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + User.GenerateHash(usr.getPassword()) + ":" + usr.getEmail() + ":" + usr.getPerm();
 
 				WriteLN(Kernel.UserConfigFile, userstring);
 
 				Console.WriteLine("Administrator wurde angelegt.");
 			}
+
+			while (CurrentUser.getUsername() == "" && CurrentUser.getVorname() == "" && CurrentUser.getNachname() == "")
+			{
+				Console.Clear();
+				welcome = 0;
+				Console.WriteLine("You are not logged in.");
+				Console.WriteLine("Please enter an username and password!");
+				Console.WriteLine("Username: ");
+				string username = Console.ReadLine();
+				Console.WriteLine("Password: ");
+				string password = Console.ReadLine();
+				Console.WriteLine(User.GenerateHash(password));
+
+				UserControls.login(username, password);
+			}
+
+			if(welcome == 0)
+			{
+				Console.Clear();
+				Console.WriteLine("USER LOGGED IN");
+				Console.WriteLine("Hello {0} {1}, Welcome back!", CurrentUser.getVorname(), CurrentUser.getNachname());
+				Console.WriteLine("System-Version {0}", versionString);
+				Console.WriteLine("System-Start {0}", dt_start);
+				Console.WriteLine("====================================");
+				welcome++;
+			}
+
 
 			Console.Write("Enter Command: ");
 

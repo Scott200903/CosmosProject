@@ -46,6 +46,8 @@ namespace CosmosProject
 				{ "file", args => fc.commands(args) },
 				//UserControls
 				{ "user", args => uc.commands(args) },
+				{ "logout", args => uc.commands(args) },
+
 			};
 		}
 		public void commands(string[] args)

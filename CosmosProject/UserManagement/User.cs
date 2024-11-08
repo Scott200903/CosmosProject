@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -75,5 +76,25 @@ namespace CosmosProject.UserManagement
 			return this.perm;
 		}
 
+		public static string GenerateHash(string input)
+		{
+			// Ein einfacher Hash-Algorithmus, der die Zeichen des Eingabestrings verarbeitet
+			StringBuilder hashBuilder = new StringBuilder();
+			int hash = 0;
+
+			foreach (char c in input)
+			{
+				hash += c;
+				hashBuilder.Append(hash % 10); // Füge die letzte Ziffer des Hashs hinzu
+			}
+
+			// Stelle sicher, dass der Hash mindestens 25 Zeichen lang ist
+			while (hashBuilder.Length < 25)
+			{
+				hashBuilder.Append(hashBuilder.ToString()); // Verdopple den Hash
+			}
+
+			return hashBuilder.ToString().Substring(0, 25); // Gebe die ersten 25 Zeichen zurück
+		}
 	}
 }
