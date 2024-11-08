@@ -14,6 +14,8 @@ namespace CosmosProject.UserManagement
 		private string password { get; set; }
 		private string email { get; set; }
 
+		private int perm {  get; set; }
+
         //admin = 0 - kein Administrator
         //admin = 1 - Administrator
 
@@ -24,14 +26,16 @@ namespace CosmosProject.UserManagement
 			this.username = "";
 			this.password = "";
 			this.email = "";
+			this.perm = 0;
 		}
-        public User(string username, string vorname, string nachname, string password, string email)
+        public User(string username, string vorname, string nachname, string password, string email, int perm)
         {
             this.username = username;
 			this.vorname = vorname;
 			this.nachname = nachname;
 			this.password = password;
 			this.email = email;
+			this.perm = perm;
         }
 		public void setPassword(string newPassword)
 		{
@@ -40,6 +44,10 @@ namespace CosmosProject.UserManagement
 		public void setEmail(string newEmail)
 		{
 			this.email = newEmail;
+		}
+		public void setPerm(int permlevel)
+		{
+			this.perm = permlevel;
 		}
 
 		public string getUsername()
@@ -61,6 +69,10 @@ namespace CosmosProject.UserManagement
 		public string getEmail()
 		{
 			return this.email;
+		}
+		public int getPerm()
+		{
+			return this.perm;
 		}
 
 	}

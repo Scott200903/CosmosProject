@@ -41,7 +41,11 @@ namespace CosmosProject
 		};
 
 		public static List<User> allusers;
+		public static List<User> adminusers;
+		public static List<User> normalusers;
 
+		public int cntusers;
+		public int cntadmin;
 		public static Sys.FileSystem.CosmosVFS fs = new Cosmos.System.FileSystem.CosmosVFS();
 
 		public static DateTime dt_start;
@@ -53,6 +57,12 @@ namespace CosmosProject
 		protected override void BeforeRun()
 		{
 			dt_start = DateTime.Now;
+
+			cntadmin = 0;
+			cntusers = 0;
+
+			normalusers = new List<User>();
+			adminusers = new List<User>();
 
 			Console.WriteLine("Cosmos booted successfully.");
 			allusers = new List<User>();
@@ -86,6 +96,80 @@ namespace CosmosProject
 		}
 		protected override void Run()
 		{
+			if (!File.Exists(UserConfigFile))
+			{
+				fs.CreateFile(UserConfigFile);
+			}
+
+			//allusers.Clear();
+			//adminusers.Clear();
+			//normalusers.Clear();
+			try
+			{
+				allusers = UserControls.getallUsers();
+			}
+			catch (Exception ex) {Console.WriteLine(ex.Message); return; }
+			
+
+			foreach (User tmp in allusers)
+			{
+				//Console.WriteLine(tmp.getUsername());
+				//Console.WriteLine(tmp.getVorname());
+				//Console.WriteLine(tmp.getNachname());
+				//Console.WriteLine(tmp.getEmail());
+				//Console.WriteLine(tmp.getPerm());
+				if (tmp.getPerm() == 0)
+				{
+					cntusers++;
+					normalusers.Add(tmp);
+				}
+				else if (tmp.getPerm() == 1)
+				{
+					cntadmin++;
+					adminusers.Add(tmp);
+				}
+			}
+
+			if (cntadmin == 0)
+			{
+				Console.WriteLine("Es existiert kein Administrator!!");
+				Console.WriteLine("Bitte legen Sie einen an:");
+
+				Console.Write("Enter Username:");
+				string username = Console.ReadLine();
+
+				Console.Write("Enter Vorname:");
+				string vorname = Console.ReadLine();
+
+				Console.Write("Enter Nachname:");
+				string nachname = Console.ReadLine();
+
+				string password = "";
+				while (!UserControls.isvalidpw(password))
+				{
+					Console.Write("Enter Password:");
+					password = Console.ReadLine();
+
+					Console.Write("Enter Password again:");
+					string passwordretype = Console.ReadLine();
+
+					if (password != passwordretype)
+					{
+						Console.WriteLine("Password not the same");
+						return;
+					}
+				}
+				Console.Write("Enter Email:");
+				string email = Console.ReadLine();
+
+				User usr = new User(username, vorname, nachname, password, email, 1);
+				string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + usr.getPassword().GetHashCode().ToString() + ":" + usr.getEmail() + ":" + usr.getPerm();
+
+				WriteLN(Kernel.UserConfigFile, userstring);
+
+				Console.WriteLine("Administrator wurde angelegt.");
+			}
+
 			Console.Write("Enter Command: ");
 
 			string input = Console.ReadLine();

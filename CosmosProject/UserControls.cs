@@ -51,19 +51,37 @@ namespace CosmosProject
 			}
 		}
 
-		public List<User> getallUsers()
+		public static List<User> getallUsers()
 		{
 			List<User> users = new List<User>();
+			int linecnt = 0;
 			foreach (string line in File.ReadLines(Kernel.UserConfigFile))
 			{
+				Console.WriteLine(linecnt);
+				linecnt++;
+				if(line == "" || String.IsNullOrEmpty(line))
+				{
+					//Console.WriteLine("line empty");
+					return new List<User>();
+				}
 				string[] splitted = line.Split(":");
-				users.Add(new User(splitted[0], splitted[1], splitted[2], splitted[3], splitted[4]));
+				if (splitted.Length == 0)
+				{
+					Console.WriteLine("splitted length 0");
+					return new List<User>();
+				}
+				else
+				{
+					//Console.WriteLine("User add");
+					int permlevel = int.Parse(splitted[5]);
+					users.Add(new User(splitted[0], splitted[1], splitted[2], splitted[3], splitted[4], permlevel));
+					//Console.WriteLine("User added");
+				}
 			}
-
 			return users;
 		}
 
-		public bool isvalidpw(string password)
+		public static bool isvalidpw(string password)
 		{
 			bool valid = false;
 			if (password == null)
@@ -150,8 +168,8 @@ namespace CosmosProject
 							Console.Write("Enter Email:");
 							string email = Console.ReadLine();
 
-							User usr = new User(username, vorname, nachname, password, email);
-							string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + usr.getPassword().GetHashCode().ToString() + ":" + usr.getEmail();
+							User usr = new User(username, vorname, nachname, password, email, 0);
+							string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + usr.getPassword().GetHashCode().ToString() + ":" + usr.getEmail() + ":" + usr.getPerm().ToString();
 
 							Console.WriteLine(userstring);
 
