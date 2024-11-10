@@ -40,11 +40,23 @@ namespace CosmosProject.UserManagement
         }
 		public void setPassword(string newPassword)
 		{
-			this.password = newPassword;
+			this.password = GenerateHash(newPassword);
 		}
 		public void setEmail(string newEmail)
 		{
 			this.email = newEmail;
+		}
+		public void setUsername(string newUsername)
+		{
+			this.username = newUsername;
+		}
+		public void setVorname(string newVorname)
+		{
+			this.vorname = newVorname;
+		}
+		public void setNachname(string newNachname)
+		{
+			this.nachname = newNachname;
 		}
 		public void setPerm(int permlevel)
 		{

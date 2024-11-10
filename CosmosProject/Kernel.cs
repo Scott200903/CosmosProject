@@ -94,7 +94,7 @@ namespace CosmosProject
 			//	"-add - Anlegen eines neuen Users in Config-File\n" +
 			//	"-list - Ausgabe alles bereits angelegten Users\n--------\n";
 
-			versionString = "0.1";
+			versionString = "0.6";
 		}
 		protected override void Run()
 		{
@@ -196,7 +196,7 @@ namespace CosmosProject
 				Console.WriteLine("Hello {0} {1}, Welcome back!", CurrentUser.getVorname(), CurrentUser.getNachname());
 				Console.WriteLine("System-Version {0}", versionString);
 				Console.WriteLine("System-Start {0}", dt_start);
-				Console.WriteLine("====================================");
+				Console.WriteLine("================================");
 				welcome++;
 			}
 
