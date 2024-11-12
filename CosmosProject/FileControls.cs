@@ -152,7 +152,6 @@ namespace CosmosProject
 				}
 			}
 		}
-
 		private void makedir(string[] payload)
 		{
 			if (payload.Length == 2)
@@ -174,8 +173,6 @@ namespace CosmosProject
 				return;
 			}
 		}
-
-
 		public void helpFileControls(string[] payload)
 		{
 			if (payload.Length < 2)
@@ -191,7 +188,6 @@ namespace CosmosProject
 				Console.WriteLine("touch <filename> - Erstellt eine Datei mit angegebenen Namen");
 			}
 		}
-
 		private int createfile(string[] payload)
 		{
 			if (payload.Length >= 2)
@@ -274,6 +270,37 @@ namespace CosmosProject
 
 					if (payload[1] == "--file" || payload[1] == "-f")
 					{
+						if (payload[2] == "configs\\users.txt")
+						{
+							if (Kernel.CurrentUser.getPerm() == 1)
+							{
+								bool valid = false;
+								do
+								{
+									valid = false;
+									Console.Write("Möchtest du {0} wirklich löschen?(y/n) ", @"0:\" + payload[2]);
+									char confirm = Convert.ToChar(Console.ReadLine().Substring(0, 1));
+
+									if (confirm == 'y' || confirm == 'Y')
+									{
+										File.Delete(@"0:\" + payload[2]);
+										Console.WriteLine("file deleted!");
+										valid = true;
+									}
+									else if (confirm == 'n' || confirm == 'N')
+									{
+										Console.WriteLine("file not deleted!");
+										valid = true;
+									}
+									else
+									{
+										Console.WriteLine("Invalid input");
+										valid = false;
+									}
+								} while (valid != true);
+							}
+							return 0;
+						}
 						if (File.Exists(@"0:\" + payload[2]))
 						{
 							File.Delete(@"0:\" + payload[2]);
@@ -330,6 +357,94 @@ namespace CosmosProject
 			//			return 2;
 			//		}
 			//	}
+		}
+
+		public static void FindandReplace(string filename, string searchitem, string replaceitem, int index)
+		{
+			List<string> alllinesinfile = new List<string>();
+			string[] linesplit = new string[15];
+
+			if (File.Exists(filename))
+			{
+				foreach(string line in File.ReadLines(filename))
+				{
+					alllinesinfile.Add(line);
+				}
+				File.WriteAllText(filename, string.Empty);
+
+				foreach(string line in alllinesinfile)
+				{
+					if (line.Contains(searchitem + ":"))
+					{
+						linesplit = line.Split(':');
+						string replacedline = "";
+
+						for (int i = 0; i < linesplit.Length; i++)
+						{
+							if (index == 5)
+							{
+								replacedline = replacedline + replaceitem;
+								//Console.WriteLine(replacedline);
+							}
+							else if (i == index)
+							{
+								replacedline = replacedline + replaceitem + ":";
+								//Console.WriteLine(replacedline);
+							}
+							else
+							{
+								replacedline = replacedline + linesplit[i] + ":";
+								//Console.WriteLine(replacedline);
+							}
+						}
+						Console.WriteLine("replacedLine = {0}", replacedline);
+						UserControls.WriteLN(Kernel.UserConfigFile, replacedline);
+					}
+					else
+					{
+						UserControls.WriteLN(Kernel.UserConfigFile, line);
+					}
+				}
+			}
+			else
+			{
+				Console.WriteLine("Filename {0} not exists!", filename); return;
+			}
+
+			//if (File.Exists(filename))
+			//{
+			//	foreach(string line in File.ReadLines(filename))
+			//	{
+			//		if (line.Contains(searchitem + ":"))
+			//		{
+			//			Console.WriteLine("line.Contains {0}", searchitem + ":");
+
+				//			linesplit = line.Split(":");
+
+				//			if (index < linesplit.Length)
+				//			{
+				//				File
+				//				Console.WriteLine("linesplit at Index {0} = {1}", index, linesplit[index]);
+				//				Console.WriteLine("replaceitem = {0}", replaceitem);
+				//				linesplit[(int)index] = replaceitem;
+				//				line.re
+				//				string replacedline = line.Replace(linesplit[index], replaceitem);
+
+				//				Console.WriteLine("replacedline = {0}", replacedline);
+				//			}
+				//			else
+				//			{
+				//				Console.WriteLine("Index {0} is out of Range of Array-Length {1}", index, linesplit.Length);
+				//				return;
+				//			}
+				//		}
+				//		else { }
+				//	}
+				//}
+				//else
+				//{
+				//	Console.WriteLine("Filename {0} not exists!", filename); return;
+				//}
 		}
 	}
 }

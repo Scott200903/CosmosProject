@@ -26,6 +26,7 @@ namespace CosmosProject
 			{
 				{ "user", args => controlUser(args) },
 				{ "logout", args => Kernel.CurrentUser = new User() },
+				{ "chmod", args => Chmod(args) },
 			};
 		}
 		public void commands(string[] args)
@@ -165,7 +166,7 @@ namespace CosmosProject
 			return valid = false;
 		}
 
-		public void WriteLN(string path, string text)
+		public static void WriteLN(string path, string text)
 		{
 			Console.WriteLine(path);
 
@@ -196,8 +197,16 @@ namespace CosmosProject
 				{
 					case "--add":
 						{
-
-							AddUser();
+							if(Kernel.CurrentUser.getPerm() == 1)
+							{
+								AddUser();
+								break;
+							}
+							else
+							{
+								NoPermissions();
+								break;
+							}
 							//bool sameusername;
 							//string username = "";
 							//do
@@ -279,8 +288,16 @@ namespace CosmosProject
 						}
 					case "--edit":
 						{
-							EditUser();
-							break;
+							if (Kernel.CurrentUser.getPerm() == 1)
+							{
+								EditUser();
+								break;
+							}
+							else
+							{
+								NoPermissions();
+								break;
+							}
 						}
 
 						//if (File.Exists(usercnfFile))
@@ -364,7 +381,6 @@ namespace CosmosProject
 
 			} while (choosedUser.getUsername() == "");
 		}
-
 		public void EditUserProperties(User choosedUser)
 		{
 			Console.Clear();
@@ -383,7 +399,8 @@ namespace CosmosProject
 
 			string[] splitprops = props.Split(" ");
 
-			User beforeEdit = choosedUser;
+			User beforeEdit = new User(choosedUser);
+
 			User tmpUser = choosedUser;
 
 			foreach (string s in splitprops)
@@ -455,12 +472,12 @@ namespace CosmosProject
 			Console.Clear();
 			Console.WriteLine("Bist du sicher den User zu aendern?");
 			Console.WriteLine("Alte Eigenschaften:\n");
-			Console.WriteLine("Username: " + tmpUser.getUsername());
-			Console.WriteLine("Vorname: " + tmpUser.getVorname());
-			Console.WriteLine("Nachname: " + tmpUser.getNachname());
-			Console.WriteLine("E-Mail-Adresse: " + tmpUser.getEmail());
-			Console.WriteLine("Berechtigung: " + tmpUser.getPerm());
-			Console.WriteLine("Passwort (Hashed): " + tmpUser.getPassword());
+			Console.WriteLine("Username: " + choosedUser.getUsername());
+			Console.WriteLine("Vorname: " + choosedUser.getVorname());
+			Console.WriteLine("Nachname: " + choosedUser.getNachname());
+			Console.WriteLine("E-Mail-Adresse: " + choosedUser.getEmail());
+			Console.WriteLine("Berechtigung: " + choosedUser.getPerm());
+			Console.WriteLine("Passwort (Hashed): " + choosedUser.getPassword());
 			Console.WriteLine("===============================================");
 			Console.WriteLine("Neue Eigenschaften:\n");
 			Console.WriteLine("Username: " + beforeEdit.getUsername());
@@ -479,6 +496,49 @@ namespace CosmosProject
 				if (confirm == 'y' || confirm == 'Y')
 				{
 					Console.WriteLine("Properties edited!");
+
+					foreach (string s in splitprops)
+					{
+						switch (s.ToLower())
+						{
+							case "username":
+								{
+									FileControls.FindandReplace(Kernel.UserConfigFile, choosedUser.getUsername(), beforeEdit.getUsername(), 0);
+									break;
+								}
+							case "vorname":
+								{
+									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getVorname(), 1);
+									break;
+								}
+							case "nachname":
+								{
+									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getNachname(), 2);
+									break;
+								}
+							case "email":
+								{
+									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getEmail(), 4);
+									break;
+								}
+							case "berechtigung":
+								{
+									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getPerm().ToString(), 5);
+									break;
+								}
+							case "passwort":
+								{
+									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), User.GenerateHash(beforeEdit.getPassword()), 3);
+									break;
+								}
+							default:
+								{
+									Console.WriteLine("Angegebene Eigenschaft gibt es nicht!\nMoeglichkeiten sind:\nvorname, nachname," +
+													  "username, passwort, emails, berechtigung");
+									return;
+								}
+						}
+					}
 					valid = true;
 				}
 				else if (confirm == 'n' || confirm == 'N')
@@ -507,6 +567,10 @@ namespace CosmosProject
 				Console.WriteLine("Create a new user\n=================");
 				Console.Write("Enter Username:");
 				username = Console.ReadLine();
+				if(username == "q")
+				{
+					return;
+				}
 
 				Kernel.allusers = getallUsers();
 
@@ -565,11 +629,60 @@ namespace CosmosProject
 
 			return;
 		}
-
 		public static void NoPermissions()
 		{
 			Console.WriteLine("You have no permissions to edit users!\nTry to login with Administrator-Account");
 			return;
+		}
+		public void Chmod(string[] payload)
+		{
+			if(Kernel.CurrentUser.getPerm() != 1)
+			{
+				NoPermissions();
+			}
+			else
+			{
+				if (payload.Length < 3)
+				{
+					Console.WriteLine("Wrong usage! \"chmod <username> <permission>\"\n<username> try \"user --list\" and <permission> 1 administrator and 0 normal user");
+					return;
+				}
+				else
+				{
+					if (int.Parse(payload[2]) == 1 || int.Parse(payload[2]) == 0)
+					{
+						bool changed = false;
+						foreach (User tmp in Kernel.allusers)
+						{
+							if (tmp.getUsername() == payload[1])
+							{
+								//Console.WriteLine("User found!");
+								FileControls.FindandReplace(Kernel.UserConfigFile, tmp.getUsername(), payload[2], 5);
+								changed = true;
+
+							}
+						}
+
+						if(changed == false)
+						{
+							Console.WriteLine("User not found: {0}", payload[1]);
+							return;
+						}
+						else
+						{
+							Console.WriteLine("Permission changed!");
+							return;
+						}
+						return;
+					}
+					else
+					{
+						Console.WriteLine("Permission is not allowed! Only 0 and 1");
+						return;
+					}
+					
+				}
+			}
 		}
 	}
 }

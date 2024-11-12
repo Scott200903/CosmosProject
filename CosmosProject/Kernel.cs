@@ -98,9 +98,14 @@ namespace CosmosProject
 		}
 		protected override void Run()
 		{
+			//Console.WriteLine("delete");
+			//File.Delete(UserConfigFile);
+			//Console.WriteLine("after delete");
 			if (!File.Exists(UserConfigFile))
 			{
 				fs.CreateFile(UserConfigFile);
+
+				UserControls.WriteLN(UserConfigFile, "root:Test:test:" + User.GenerateHash("CosmosAdmin123") + ":admin@admin.de:1");
 			}
 
 			try

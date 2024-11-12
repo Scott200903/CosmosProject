@@ -29,6 +29,16 @@ namespace CosmosProject.UserManagement
 			this.email = "";
 			this.perm = 0;
 		}
+
+		public User(User oldUser)
+		{
+			this.vorname = oldUser.vorname;
+			this.nachname = oldUser.nachname;
+			this.username = oldUser.username;
+			this.password = oldUser.password;
+			this.email = oldUser.email;
+			this.perm = oldUser.perm;
+		}
         public User(string username, string vorname, string nachname, string password, string email, int perm)
         {
             this.username = username;

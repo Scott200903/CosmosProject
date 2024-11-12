@@ -47,7 +47,7 @@ namespace CosmosProject
 				//UserControls
 				{ "user", args => uc.commands(args) },
 				{ "logout", args => uc.commands(args) },
-
+				{ "chmod", args => uc.commands(args) },
 			};
 		}
 		public void commands(string[] args)
