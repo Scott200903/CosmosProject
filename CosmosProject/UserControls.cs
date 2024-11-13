@@ -27,6 +27,7 @@ namespace CosmosProject
 				{ "user", args => controlUser(args) },
 				{ "logout", args => Kernel.CurrentUser = new User() },
 				{ "chmod", args => Chmod(args) },
+				{ "passwd", args => ChangePassword(Kernel.CurrentUser) }
 			};
 		}
 		public void commands(string[] args)
@@ -168,7 +169,7 @@ namespace CosmosProject
 
 		public static void WriteLN(string path, string text)
 		{
-			Console.WriteLine(path);
+			//Console.WriteLine(path);
 
 			if (File.Exists(path))
 			{
@@ -298,42 +299,16 @@ namespace CosmosProject
 								NoPermissions();
 								break;
 							}
+
 						}
-
-						//if (File.Exists(usercnfFile))
-						//{
-						//	Wr
-
-						//	File.WriteAllText(usercnfFile, content +"\n" + userstring);
-						//	return;
-						//}
-						//else
-						//{
-						//	Console.WriteLine("Config-File for Users doesn´t exists!");
-						//	return;
-						//}							
-
-						//
-
-						//string configUser = @"0:\users\configs.txt";
-						//if (File.Exists(@"0:\users\configs.txt"))
-						//{
-						//	string configUser = @"0:\users\configs.txt";
-						//	User usr = new();
-						//	string contents = File.ReadAllText(configUser);
-						//	string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + ComputeSha256Hash(usr.getPassword()) + ":" + usr.getEmail();
-
-						//	File.WriteAllText(configUser, contents + userstring);
-						//}
-						//else
-						//{
-						//	Console.WriteLine("Config not exists");
-						//}
-						break;
-
+					case "help":
+						{
+							helpFileControls();
+							break;
+						}
 					default:
 						{
-							Console.WriteLine("Invalid Command! Enter \"help\" for more informations!");
+							Console.WriteLine("Invalid Command! Enter \"user help\" for more informations!");
 							break;
 						}
 				}
@@ -495,50 +470,8 @@ namespace CosmosProject
 
 				if (confirm == 'y' || confirm == 'Y')
 				{
+					FileControls.FindandReplace(Kernel.UserConfigFile, choosedUser.getUsername(), beforeEdit);
 					Console.WriteLine("Properties edited!");
-
-					foreach (string s in splitprops)
-					{
-						switch (s.ToLower())
-						{
-							case "username":
-								{
-									FileControls.FindandReplace(Kernel.UserConfigFile, choosedUser.getUsername(), beforeEdit.getUsername(), 0);
-									break;
-								}
-							case "vorname":
-								{
-									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getVorname(), 1);
-									break;
-								}
-							case "nachname":
-								{
-									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getNachname(), 2);
-									break;
-								}
-							case "email":
-								{
-									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getEmail(), 4);
-									break;
-								}
-							case "berechtigung":
-								{
-									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), beforeEdit.getPerm().ToString(), 5);
-									break;
-								}
-							case "passwort":
-								{
-									FileControls.FindandReplace(Kernel.UserConfigFile, beforeEdit.getUsername(), User.GenerateHash(beforeEdit.getPassword()), 3);
-									break;
-								}
-							default:
-								{
-									Console.WriteLine("Angegebene Eigenschaft gibt es nicht!\nMoeglichkeiten sind:\nvorname, nachname," +
-													  "username, passwort, emails, berechtigung");
-									return;
-								}
-						}
-					}
 					valid = true;
 				}
 				else if (confirm == 'n' || confirm == 'N')
@@ -656,10 +589,10 @@ namespace CosmosProject
 						{
 							if (tmp.getUsername() == payload[1])
 							{
+								tmp.setPerm(int.Parse(payload[2]));
 								//Console.WriteLine("User found!");
-								FileControls.FindandReplace(Kernel.UserConfigFile, tmp.getUsername(), payload[2], 5);
+								FileControls.FindandReplace(Kernel.UserConfigFile, tmp.getUsername(), tmp);
 								changed = true;
-
 							}
 						}
 
@@ -683,6 +616,49 @@ namespace CosmosProject
 					
 				}
 			}
+		}
+
+		public void ChangePassword(User user)
+		{
+			Console.WriteLine("Change password from {0}, {1} {2}", user.getUsername(), user.getVorname(), user.getNachname());
+
+			string password = "";
+			do
+			{
+				Console.Write("Enter new password:");
+				password = Console.ReadLine();
+
+				if (isvalidpw(password) == true)
+				{
+					Console.Write("Enter password again:");
+					string passwordretype = Console.ReadLine();
+
+					if (password != passwordretype)
+					{
+						Console.WriteLine("Password not the same");
+						return;
+					}
+				}
+
+			} while (isvalidpw(password) == false);
+
+			user.setPassword(password);
+			FileControls.FindandReplace(Kernel.UserConfigFile, user.getUsername(), user);
+			Console.WriteLine("password from {0}, {1} {2} successfully changed!", user.getUsername(), user.getVorname(), user.getNachname());
+			Console.WriteLine("Changes will be applied after logout");
+		}
+
+		public void helpFileControls()
+		{
+			Console.WriteLine("general commands to manage the users:\n");
+			Console.WriteLine("usage: user <options> - controls user actions");
+			Console.WriteLine("\t<options> --add add a new user to the system (only as an administrator!)");
+			Console.WriteLine("\t<options> --edit edit an existing user from the system (only as an administrator!)");
+			Console.WriteLine("\t<options> --list list all existing users from the system from file \"0:\\configs\\users.txt\"");
+			Console.WriteLine("usage: chmod <username> <permission> - change the permission to <permission> from <username> (only as an administrator!)");
+			Console.WriteLine("\t<permissions> 0 | 1 - 0 = normal user, 1 = administrator");
+			Console.WriteLine("usage: passwd - change the password from current user");
+			Console.WriteLine("usage: logout - logout the current user");
 		}
 	}
 }

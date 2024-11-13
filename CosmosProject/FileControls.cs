@@ -1,4 +1,5 @@
 ﻿using CosmosProject.fsystem;
+using CosmosProject.UserManagement;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -182,10 +183,16 @@ namespace CosmosProject
 			}
 			else
 			{
-				Console.WriteLine("Allgemeine Commands zur File-Verwaltung:\n");
-				Console.WriteLine("ls or dir - Listet Verzeichnisstruktur auf ");
-				Console.WriteLine("mkdir <directoryname> - Erstellt ein Ordner mit angegebenen Namen");
-				Console.WriteLine("touch <filename> - Erstellt eine Datei mit angegebenen Namen");
+				Console.WriteLine("general commands to manage the filesystem:\n");
+				Console.WriteLine("usage: file help - list filesystem commands");
+				Console.WriteLine("usage: ls [<filename>]| dir [<filename>] - list filesystem structure");
+				Console.WriteLine("\t[<filename>] list filesystem structure from <filename>");
+				Console.WriteLine("usage: mkdir <directoryname> - Erstellt ein Ordner mit angegebenen Namen");
+				Console.WriteLine("usage: touch <filename> [<options>] - create a file with name <filename>");
+				Console.WriteLine("\t[<options>] -y force create (overwrite existing file)");
+				Console.WriteLine("usage: rm <options> <filename> - removes a file or directory");
+				Console.WriteLine("\t <options> -f | --file delete a file with <filename>");
+				Console.WriteLine("\t <options> -d | --dir delete a directory with <filename>");
 			}
 		}
 		private int createfile(string[] payload)
@@ -358,7 +365,39 @@ namespace CosmosProject
 			//		}
 			//	}
 		}
+		public static void FindandReplace(string filename, string searchitem, User user)
+		{
+			List<string> alllinesinfile = new List<string>();
+			string[] linesplit = new string[15];
 
+			if (File.Exists(filename))
+			{
+				foreach (string line in File.ReadLines(filename))
+				{
+					alllinesinfile.Add(line);
+				}
+				File.WriteAllText(filename, string.Empty);
+
+				foreach (string line in alllinesinfile)
+				{
+					if (line.Contains(searchitem + ":"))
+					{
+						string replacedline = "";
+						replacedline = user.getUsername() + ":" + user.getVorname() + ":" + user.getNachname() + ":" + user.getPassword() + ":" + user.getEmail() + ":" + user.getPerm();
+						//Console.WriteLine("replacedLine = {0}", replacedline);
+						UserControls.WriteLN(Kernel.UserConfigFile, replacedline);
+					}
+					else
+					{
+						UserControls.WriteLN(Kernel.UserConfigFile, line);
+					}
+				}
+			}
+			else
+			{
+				Console.WriteLine("Filename {0} not exists!", filename); return;
+			}
+		}
 		public static void FindandReplace(string filename, string searchitem, string replaceitem, int index)
 		{
 			List<string> alllinesinfile = new List<string>();
@@ -397,7 +436,7 @@ namespace CosmosProject
 								//Console.WriteLine(replacedline);
 							}
 						}
-						Console.WriteLine("replacedLine = {0}", replacedline);
+						//Console.WriteLine("replacedLine = {0}", replacedline);
 						UserControls.WriteLN(Kernel.UserConfigFile, replacedline);
 					}
 					else

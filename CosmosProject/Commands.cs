@@ -48,6 +48,7 @@ namespace CosmosProject
 				{ "user", args => uc.commands(args) },
 				{ "logout", args => uc.commands(args) },
 				{ "chmod", args => uc.commands(args) },
+				{ "passwd", args => uc.commands(args) },
 			};
 		}
 		public void commands(string[] args)
@@ -85,15 +86,24 @@ namespace CosmosProject
 
 		public void helpCommand()
 		{
-			string possible =
-				"Allgemeine Commands zur Verwaltung des Systems:\n\n" +
-				"poweroff OR shutdown - Herunterfahren des Systems\n--------\n" +
-				"version - Ausgabe der aktuellen Version\n--------\n" +
-				"runtime - Gibt die aktuelle Runtime zurück\n--------\n" +
-				"echo [OPTIONS] - gibt die Argumente von der Kommandozeile aus\n--------\n" +
-				"clear OR cls - Bereinigt den Inhalt der Kommandozeile\n--------\n"; ;
 
-			Console.WriteLine(possible);
+			Console.WriteLine("general commands to manage the system:\n");
+			Console.WriteLine("usage: help - print out system commands");
+			Console.WriteLine("usage: clear | cls - clear the console");
+			Console.WriteLine("usage: echo <arguments> - print out <arguments> from commandline");
+			Console.WriteLine("usage: cat <filename> | type <filename> - print out the content from <filename>");
+			Console.WriteLine("usage: runtime - print out the runtime of the system");
+			Console.WriteLine("usage: version - print out the version of the system");
+			Console.WriteLine("usage: poweroff | shutdown - shutdown the system");
+			//string possible =
+			//	"Allgemeine Commands zur Verwaltung des Systems:\n\n" +
+			//	"poweroff OR shutdown - Herunterfahren des Systems\n--------\n" +
+			//	"version - Ausgabe der aktuellen Version\n--------\n" +
+			//	"runtime - Gibt die aktuelle Runtime zurück\n--------\n" +
+			//	"echo [OPTIONS] - gibt die Argumente von der Kommandozeile aus\n--------\n" +
+			//	"clear OR cls - Bereinigt den Inhalt der Kommandozeile\n--------\n"; ;
+
+			//Console.WriteLine(possible);
 		}
 		private void Echo(string[] payload)
 		{
@@ -103,11 +113,12 @@ namespace CosmosProject
 				{
 					Console.Write(payload[i] + " ");
 				}
-				Console.WriteLine();
+				return;
 			}
 			else
 			{
-				Console.WriteLine("Enter an option");
+				Console.WriteLine("Enter arguments that should be printed out!");
+				return;
 			}
 		}
 
@@ -120,15 +131,17 @@ namespace CosmosProject
 					string contents = File.ReadAllText(@"0:\" + payload[1]);
 
 					Console.WriteLine(contents);
+					return;
 				}
 				catch (Exception ex)
 				{
-					Console.WriteLine(ex.ToString());
+					Console.WriteLine(ex.ToString());return;
 				}
 			}
 			else
 			{
-				Console.WriteLine("Enter a filename! Use ls or dir!");
+				Console.WriteLine("Enter a filename! Use ls or dir to list all files and directories!");
+				return;
 			}
 		}
 	}

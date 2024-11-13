@@ -121,12 +121,6 @@ namespace CosmosProject
 
 			foreach (User tmp in allusers)
 			{
-				//Console.WriteLine(tmp.getUsername());
-				//Console.WriteLine(tmp.getVorname());
-				//Console.WriteLine(tmp.getNachname());
-				//Console.WriteLine(tmp.getEmail());
-				//Console.WriteLine(tmp.getPerm());
-				//Console.WriteLine(tmp.getPassword());
 				if (tmp.getPerm() == 0)
 				{
 					cntusers++;
