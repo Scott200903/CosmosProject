@@ -95,6 +95,8 @@ namespace CosmosProject
 			Console.WriteLine("usage: runtime - print out the runtime of the system");
 			Console.WriteLine("usage: version - print out the version of the system");
 			Console.WriteLine("usage: poweroff | shutdown - shutdown the system");
+			Console.WriteLine("usage: user help - print out user commands");
+			Console.WriteLine("usage: file help - print out file commands");
 			//string possible =
 			//	"Allgemeine Commands zur Verwaltung des Systems:\n\n" +
 			//	"poweroff OR shutdown - Herunterfahren des Systems\n--------\n" +

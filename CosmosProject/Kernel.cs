@@ -97,10 +97,7 @@ namespace CosmosProject
 			versionString = "0.6";
 		}
 		protected override void Run()
-		{
-			//Console.WriteLine("delete");
-			//File.Delete(UserConfigFile);
-			//Console.WriteLine("after delete");
+		{ 
 			if (!File.Exists(UserConfigFile))
 			{
 				fs.CreateFile(UserConfigFile);
@@ -148,20 +145,25 @@ namespace CosmosProject
 				string nachname = Console.ReadLine();
 
 				string password = "";
-				while (!UserControls.isvalidpw(password))
+				do
 				{
 					Console.Write("Enter Password:");
-					password = Console.ReadLine();
+					password = UserControls.ReadPassword();
 
-					Console.Write("Enter Password again:");
-					string passwordretype = Console.ReadLine();
-
-					if (password != passwordretype)
+					if (UserControls.isvalidpw(password) == true)
 					{
-						Console.WriteLine("Password not the same");
-						return;
+						Console.Write("Enter Password again:");
+						string passwordretype = UserControls.ReadPassword();
+
+						if (password != passwordretype)
+						{
+							Console.WriteLine("Password not the same");
+							return;
+						}
+						break;
 					}
-				}
+
+				} while (UserControls.isvalidpw(password) == false);
 				Console.Write("Enter Email:");
 				string email = Console.ReadLine();
 
@@ -182,7 +184,7 @@ namespace CosmosProject
 				Console.WriteLine("Username: ");
 				string username = Console.ReadLine();
 				Console.WriteLine("Password: ");
-				string password = Console.ReadLine();
+				string password = UserControls.ReadPassword();
 				Console.WriteLine(User.GenerateHash(password));
 
 				UserControls.login(username, password);

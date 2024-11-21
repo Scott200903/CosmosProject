@@ -108,6 +108,13 @@ namespace CosmosProject
 				}
 				else
 				{
+					if(splitted.Length < 6)
+					{
+						Console.WriteLine("Format from {0} is wrong! File will be reseted!", Kernel.UserConfigFile);
+						File.Delete(Kernel.UserConfigFile);
+						Kernel.CurrentUser = new User();
+						return new List<User>();
+					}
 					//Console.WriteLine("User add");
 					int permlevel = int.Parse(splitted[5]);
 					users.Add(new User(splitted[0], splitted[1], splitted[2], splitted[3], splitted[4], permlevel));
@@ -285,6 +292,11 @@ namespace CosmosProject
 							{
 								Console.WriteLine(u.getUsername() + "||" + u.getVorname() + "||" + u.getNachname() + "||" + u.getPassword() + "||" + u.getEmail() + "||" + u.getPerm());
 							}
+							break;
+						}
+					case "--delete":
+						{
+							deleteUser(payload);
 							break;
 						}
 					case "--edit":
@@ -648,6 +660,85 @@ namespace CosmosProject
 			Console.WriteLine("Changes will be applied after logout");
 		}
 
+		public void deleteUser(string[] payload)
+		{
+			User choosedUser = null;
+
+			if (Kernel.CurrentUser.getPerm() != 1)
+			{
+				NoPermissions();
+				return;
+			}
+
+			//EInbringen dass man den Username auch auf der Kommandozeile eingeben kann
+
+			if(payload.Length <= 2)
+			{
+				do
+				{
+					Console.Clear();
+					Console.WriteLine("Deleting users\n=================");
+
+					foreach (User u in Kernel.allusers)
+					{
+						Console.WriteLine(u.getUsername() + "||" + u.getVorname() + "||" + u.getNachname() + "||" + u.getPassword() + "||" + u.getEmail() + "||" + u.getPerm());
+					}
+
+					Console.Write("Choose a username: ");
+					string choosedusername = Console.ReadLine();
+
+					foreach (User u in Kernel.allusers)
+					{
+						if (u.getUsername() == choosedusername)
+						{
+							choosedUser = u; break;
+						}
+					}
+
+					if (choosedUser == null)
+					{
+						Console.Write("Choosed a user not exists! Try another one");
+						Thread.Sleep(3000);
+					}
+				} while (choosedUser == null);
+
+				Console.Clear();
+				Console.WriteLine("Deleting user {0}, {1} {2}\n=================", choosedUser.getUsername(), choosedUser.getVorname(), choosedUser.getNachname());
+
+				bool valid = false;
+				do
+				{
+					valid = false;
+					Console.Write("Soll der User wirklich gelöscht werden?(y/n) ");
+					char confirm = Convert.ToChar(Console.ReadLine().Substring(0, 1));
+
+					if (confirm == 'y' || confirm == 'Y')
+					{
+						Kernel.allusers.Remove(choosedUser);
+						FileControls.updateConfig(Kernel.allusers);
+						Console.WriteLine("user deleted!");
+						if(Kernel.CurrentUser == choosedUser)
+						{
+							Kernel.CurrentUser = new User();
+						}
+						valid = true;
+					}
+					else if (confirm == 'n' || confirm == 'N')
+					{
+						Console.WriteLine("user not deleted!");
+						valid = true;
+					}
+					else
+					{
+						Console.WriteLine("Invalid input");
+						valid = false;
+					}
+				} while (valid != true);
+			}
+
+			return;
+		}
+
 		public void helpFileControls()
 		{
 			Console.WriteLine("general commands to manage the users:\n");
@@ -655,10 +746,56 @@ namespace CosmosProject
 			Console.WriteLine("\t<options> --add add a new user to the system (only as an administrator!)");
 			Console.WriteLine("\t<options> --edit edit an existing user from the system (only as an administrator!)");
 			Console.WriteLine("\t<options> --list list all existing users from the system from file \"0:\\configs\\users.txt\"");
+			Console.WriteLine("\t<options> --delete delete an user from the system");
 			Console.WriteLine("usage: chmod <username> <permission> - change the permission to <permission> from <username> (only as an administrator!)");
 			Console.WriteLine("\t<permissions> 0 | 1 - 0 = normal user, 1 = administrator");
 			Console.WriteLine("usage: passwd - change the password from current user");
 			Console.WriteLine("usage: logout - logout the current user");
+		}
+
+		public static string ReadPassword()
+		{
+			// Ein StringBuilder wird verwendet, um das Passwort zeichenweise sicher zusammenzusetzen.
+			StringBuilder passwordBuilder = new StringBuilder();
+			ConsoleKeyInfo keyInfo;
+			while (true)
+			{
+				// Liest eine Taste von der Konsole, ohne sie direkt anzuzeigen (true = keine Ausgabe).
+				keyInfo = Console.ReadKey(true);
+				// Prüft, ob die Enter-Taste gedrückt wurde (Signal für das Ende der Eingabe).
+				if (keyInfo.Key == ConsoleKey.Enter)
+				{
+					Console.WriteLine(); // Springt nach Abschluss der Eingabe in eine neue Zeile.
+					break; // Bricht die Schleife ab und beendet die Eingabe.
+				}
+				// Prüft, ob die Backspace-Taste gedrückt wurde (zum Löschen des letzten Zeichens).
+				else if (keyInfo.Key == ConsoleKey.Backspace)
+				{
+					// Wenn der Passwort-String nicht leer ist:
+					if (passwordBuilder.Length > 0)
+					{
+						// Entfernt das letzte Zeichen aus dem Passwort.
+						passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
+						// Löscht das letzte Sternchen von der Konsole.
+						// Zeile 1 bewegt den Cursor zurück, " " überschreibt das Zeichen,
+						// und Zeile 3 bewegt den Cursor erneut zurück.
+						// Alternativ statt Zeile 1 und 3 geht ebenfalls Console.Write("\b \b");
+						// -> schreibt Sonderzeichen auf die Befehlszeile (nicht erwünscht)
+						Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
+						Console.Write(" ");
+						Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
+					}
+				}
+				else
+				{
+					// Fügt das gedrückte Zeichen dem Passwort hinzu.
+					passwordBuilder.Append(keyInfo.KeyChar);
+					// Gibt ein Sternchen (*) auf der Konsole aus, um die Eingabe zu verschleiern.
+					Console.Write("*");
+				}
+			}
+			// Gibt das vollständige Passwort als String zurück.
+			return passwordBuilder.ToString();
 		}
 	}
 }

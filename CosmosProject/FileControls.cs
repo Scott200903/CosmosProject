@@ -485,5 +485,17 @@ namespace CosmosProject
 				//	Console.WriteLine("Filename {0} not exists!", filename); return;
 				//}
 		}
+
+		public static void updateConfig(List<User> allUsers)
+		{
+			File.WriteAllText(Kernel.UserConfigFile, "");
+			foreach (User usr in allUsers)
+			{
+				string userstring = usr.getUsername() + ":" + usr.getVorname() + ":" + usr.getNachname() + ":" + usr.getPassword() + ":" + usr.getEmail() + ":" + usr.getPerm().ToString();
+				Console.WriteLine(userstring);
+				UserControls.WriteLN(Kernel.UserConfigFile, userstring);
+			}
+			return;
+		}
 	}
 }
