@@ -37,6 +37,8 @@ namespace CosmosProject
 				{ "echo", args => Echo(args) },
 				{ "cat", args => catfile(args)},
 				{ "type", args => catfile(args)},
+				{ "cd", args => ChangeDirectory(args) }, 
+				{ "cpyfile", args => CopyFile(args) },   
 				//FileControl
 				{ "mkdir", args => fc.commands(args) },
 				{ "ls", args => fc.commands(args) },
@@ -97,6 +99,9 @@ namespace CosmosProject
 			Console.WriteLine("usage: poweroff | shutdown - shutdown the system");
 			Console.WriteLine("usage: user help - print out user commands");
 			Console.WriteLine("usage: file help - print out file commands");
+			Console.WriteLine("usage: cd <path> - change the current directory");
+			Console.WriteLine("usage: cpyfile <source> <destination> - copy a file from source to destination");
+			
 			//string possible =
 			//	"Allgemeine Commands zur Verwaltung des Systems:\n\n" +
 			//	"poweroff OR shutdown - Herunterfahren des Systems\n--------\n" +
@@ -144,6 +149,56 @@ namespace CosmosProject
 			{
 				Console.WriteLine("Enter a filename! Use ls or dir to list all files and directories!");
 				return;
+			}
+		}
+		private void ChangeDirectory(string[] args)
+		{
+			if (args.Length > 1)
+			{
+				string newPath = Path.Combine(currentDirectory, args[1]);
+
+				if (Directory.Exists(newPath))
+				{
+					currentDirectory = newPath;
+					Console.WriteLine($"Current directory changed to: {currentDirectory}");
+				}
+				else
+				{
+					Console.WriteLine($"Directory does not exist: {newPath}");
+				}
+			}
+			else
+			{
+				Console.WriteLine("Please specify a directory to change to.");
+			}
+		}
+		private void CopyFile(string[] args)
+		{
+			if (args.Length > 2)
+			{
+				string sourcePath = Path.Combine(currentDirectory, args[1]);
+				string destinationPath = Path.Combine(currentDirectory, args[2]);
+
+				try
+				{
+					if (File.Exists(sourcePath))
+					{
+						File.Copy(sourcePath, destinationPath, true);
+						Console.WriteLine($"File copied from {sourcePath} to {destinationPath}");
+					}
+					else
+					{
+						Console.WriteLine($"Source file does not exist: {sourcePath}");
+					}
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"Error copying file: {ex.Message}");
+				}
+			}
+			else
+			{
+				Console.WriteLine("Usage: cpyfile <source> <destination>");
 			}
 		}
 	}
